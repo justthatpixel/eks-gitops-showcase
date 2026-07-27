@@ -1,8 +1,7 @@
 
 
 # 3-Tier AWS EKS GitOps Project
-<img width="1067" height="979" alt="Screenshot 2026-07-27 at 20 55 05" src="https://github.com/user-attachments/assets/cecd023d-8663-444e-890e-13ee46fcacc7" />
-
+<img width="2218" height="1858" alt="image" src="https://github.com/user-attachments/assets/3e0bdbe4-2ca1-4bd8-b716-0aab0d48d771" />
 ## Overview
 
 This project focuses on deploying an EKS (Elastic Kubernetes Service) cluster on AWS, integrating key Kubernetes tools such as ArgoCD, Helm Charts, Cert-Manager, and ExternalDNS. The goal is to achieve a robust, automated, and scalable infrastructure setup with streamlined GitOps workflows, secure certificate management, and automated DNS updates.
