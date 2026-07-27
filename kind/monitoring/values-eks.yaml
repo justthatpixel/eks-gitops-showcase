@@ -1,0 +1,51 @@
+# Layered on top of values.yaml for the EKS deploy — see
+# kind/argocd/applications-eks/monitoring.yaml for how this gets applied.
+# ArgoCD reads this file directly from git to sync, so it can't be
+# gitignored like a local values file — fill in the <PLACEHOLDER> below with
+# your own `terraform output acm_certificate_arn` and commit it.
+#
+# Three things added vs kind: real credentials instead of the chart's
+# public default ("prom-operator"), an Ingress so Grafana is actually
+# reachable (kind only ever used port-forward), and a higher memory limit —
+# ../monitoring/values.yaml's 256Mi limit was sized for kind's tiny local
+# Docker Desktop VM (its own comment says so) and OOMKilled Grafana here
+# repeatedly on EKS: once under plain dashboard use at 256Mi, again under
+# Explore (builds an in-memory query index on top of everything else) at
+# 768Mi. Set generously this time instead of chasing it a third time — each
+# node has ~3.3GiB allocatable and was sitting at ~20% used, so 2Gi as a
+# ceiling (not a reservation — actual usage sits well below this at rest)
+# costs nothing and stops the loop.
+grafana:
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: 500m, memory: 2Gi }
+
+  admin:
+    # Created by terraform/live/k8s.tf (kubernetes_secret_v1.grafana_admin) —
+    # NOT ExternalSecret. Grafana needs this Secret to exist before its Helm
+    # release installs; racing that against ESO's ClusterSecretStore adds
+    # failure modes for no benefit, since Terraform already holds the
+    # generated password directly.
+    existingSecret: grafana-admin-credentials
+    userKey: admin-user
+    passwordKey: admin-password
+
+  ingress:
+    enabled: true
+    ingressClassName: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+      alb.ingress.kubernetes.io/certificate-arn: "<ACM_CERTIFICATE_ARN>" # terraform output acm_certificate_arn
+      alb.ingress.kubernetes.io/ssl-redirect: '443'
+      # Same group.name as the app Ingress (kind/project/values-eks.yaml)
+      # and ArgoCD's below — merges all three into ONE ALB.
+      alb.ingress.kubernetes.io/group.name: landing-builder-shared
+    hosts:
+      - grafana.<YOUR_DOMAIN> # e.g. grafana.example.com
+
+# Deliberately no ingress for Prometheus/Alertmanager here — Prometheus has
+# no authentication of its own, and Grafana already reaches it in-cluster.
+# Exposing it publicly would hand out full metrics visibility to anyone
+# who finds the hostname.

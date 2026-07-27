@@ -1,0 +1,63 @@
+# ArgoCD managing its own installation on EKS — mirrors ../applications/argocd.yaml
+# (same chart, same pinned version, so this doesn't change what's already
+# running). Two real differences: exposed via the shared ALB instead of
+# ClusterIP/port-forward, and server.insecure via configs.params (verified
+# against `helm show values argo/argo-cd --version 10.2.1` — there's no
+# top-level server.insecure key, it's written into the argocd-cmd-params-cm
+# ConfigMap instead) — the ALB terminates TLS, so the server itself must
+# talk plain HTTP or it 502s behind the ALB.
+#
+# ingress.controller stays "generic", not "aws" — the "aws" mode adds a
+# second gRPC-aware NodePort Service + ALB target group for `argocd` CLI
+# access, which is more moving parts than this demo needs. Consequence:
+# the CLI (`argocd login`) doesn't work through this Ingress, only the web
+# UI does. Use `kubectl port-forward svc/argocd-server -n argocd 8080:443`
+# for CLI access.
+#
+# Deliberately MANUAL sync (no `syncPolicy.automated` block) — same reason
+# as the kind version: review `argocd app diff argocd` before the first
+# sync, the raw-manifest bootstrap install and this chart may not organize
+# resources identically even at the same version.
+#
+# ArgoCD reads this file directly from git to sync, so the ALB annotations
+# below can't be gitignored — replace <YOUR_DOMAIN> and
+# <ACM_CERTIFICATE_ARN> with your own values (from terraform.tfvars and
+# `terraform output acm_certificate_arn`) and commit it before syncing.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  project: landing-builder-eks
+  source:
+    repoURL: https://argoproj.github.io/argo-helm
+    chart: argo-cd
+    targetRevision: "10.2.1"
+    helm:
+      values: |
+        configs:
+          params:
+            server.insecure: "true"
+        server:
+          service:
+            type: ClusterIP
+          ingress:
+            enabled: true
+            controller: generic
+            ingressClassName: alb
+            hostname: argocd.<YOUR_DOMAIN> # e.g. argocd.example.com
+            annotations:
+              alb.ingress.kubernetes.io/scheme: internet-facing
+              alb.ingress.kubernetes.io/target-type: ip
+              alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+              alb.ingress.kubernetes.io/certificate-arn: <ACM_CERTIFICATE_ARN> # terraform output acm_certificate_arn
+              alb.ingress.kubernetes.io/ssl-redirect: '443'
+              alb.ingress.kubernetes.io/group.name: landing-builder-shared
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

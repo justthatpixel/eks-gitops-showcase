@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "project.fullname" . }}-backend-config
+  labels:
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  API_PORT: {{ .Values.service.port | quote }}
+  STORAGE_REGION: {{ .Values.env.storageRegion | quote }}
+  STORAGE_BUCKET: {{ .Values.env.storageBucket | quote }}
+  STORAGE_FORCE_PATH_STYLE: {{ .Values.env.storageForcePathStyle | quote }}
+  {{- if .Values.env.storageEndpoint }}
+  STORAGE_ENDPOINT: {{ .Values.env.storageEndpoint | quote }}
+  {{- end }}
+  {{- if .Values.env.otelExporterOtlpEndpoint }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.env.otelExporterOtlpEndpoint | quote }}
+  {{- end }}

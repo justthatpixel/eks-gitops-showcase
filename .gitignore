@@ -1,0 +1,37 @@
+.DS_Store
+claude.md
+claude2.md
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+# Saved plans are usually written as `-out=tfplan` with no extension, which
+# *.tfplan does not match. Plan files embed resolved variable values and
+# should never be committed.
+tfplan
+tfplan.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+# .terraform.lock.hcl is intentionally NOT ignored — commit it to pin provider versions
+
+# Real deployment values — account-specific (bucket names, domain). Copy
+# terraform.tfvars.example to terraform.tfvars and fill in your own; never
+# commit the real one.
+terraform.tfvars
+!terraform.tfvars.example
+
+# Partial backend config — holds your real state bucket name. See
+# terraform/live/backend.tf's comment for how to generate this.
+backend.hcl
+
+# Helm — packaged subchart artifacts, regenerated via `helm dependency update`
+charts/*.tgz
+
+# Full `helm show values` dumps — reference lookups, not real config; regenerate on demand
+*.reference.yaml

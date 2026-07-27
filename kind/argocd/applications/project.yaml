@@ -1,0 +1,26 @@
+# Your app chart. Automated sync — single environment.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: project
+  namespace: argocd
+spec:
+  project: landing-builder-kind
+  source:
+    repoURL: https://github.com/justthatpixel/eks-configuration.git
+    targetRevision: main
+    path: kind/project
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-kind.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: landing-builder
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

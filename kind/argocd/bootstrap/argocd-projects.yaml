@@ -1,0 +1,31 @@
+# Scopes what the app-of-apps (and everything it manages) is allowed to
+# touch. Referenced by every Application's spec.project below.
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: landing-builder-kind
+  namespace: argocd
+spec:
+  description: Landing page builder — local kind deployment
+  sourceRepos:
+    - https://github.com/justthatpixel/eks-configuration.git
+    - https://prometheus-community.github.io/helm-charts
+    - https://argoproj.github.io/argo-helm
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: landing-builder
+    - server: https://kubernetes.default.svc
+      namespace: monitoring
+    - server: https://kubernetes.default.svc
+      namespace: argocd
+  # Wide open — this is a single-operator local kind cluster, not a
+  # multi-tenant one. kube-prometheus-stack and the argo-cd chart both
+  # need cluster-scoped kinds (ClusterRole, ClusterRoleBinding, CRDs for
+  # ServiceMonitor/PrometheusRule/etc) that a tighter whitelist would block.
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

@@ -1,0 +1,58 @@
+# Default values for backend. Trimmed from the `helm create` scaffold down
+# to what this chart actually uses — see infra/project/values-kind.yaml for
+# the local-testing overrides (image tag, DATABASE_URL, etc).
+
+replicaCount: 1
+
+image:
+  repository: landing-builder/backend
+  pullPolicy: IfNotPresent
+  tag: "local" # CI would set this to a real git-SHA tag for a real deploy
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 4000 # matches application/apps/backend's API_PORT — see .env.example
+
+resources:
+  requests: { cpu: 50m, memory: 128Mi }
+  limits: { cpu: 250m, memory: 384Mi }
+
+# Non-secret env vars — see application/apps/backend/.env.example for the full list.
+# Secret values (DATABASE_URL, AUTH_SECRET, STORAGE_ACCESS_KEY/SECRET_KEY)
+# are set separately, see secret.yaml + values-kind.yaml.
+env:
+  storageRegion: us-east-1
+  storageBucket: published-pages
+  storageForcePathStyle: "true" # true for MinIO (local/kind), false for real S3
+  storageEndpoint: "" # e.g. http://host.docker.internal:9000 for kind — blank means real S3
+  otelExporterOtlpEndpoint: ""
+
+# Secret values. Default is a plain Secret sourced from the values below —
+# fine for kind/local, where these are throwaway credentials anyway. EKS
+# (values-eks.yaml) sets useExternalSecret: true, which switches secret.yaml
+# off and external-secret.yaml on instead, pulling from SSM Parameter Store
+# via the ClusterSecretStore Terraform creates — real credentials then never
+# sit in a values file.
+secretEnv:
+  useExternalSecret: false
+  databaseUrl: ""
+  authSecret: ""
+  storageAccessKey: ""
+  storageSecretKey: ""
+  # Only read when useExternalSecret is true:
+  clusterSecretStoreName: ""
+  databaseUrlParamName: ""
+  authSecretParamName: ""
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

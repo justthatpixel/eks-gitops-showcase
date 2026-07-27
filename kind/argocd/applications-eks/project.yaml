@@ -1,0 +1,29 @@
+# The app itself on EKS — same chart as ../applications/project.yaml
+# (kind/project), reading values-eks.yaml instead of values-kind.yaml:
+# real ECR images, ALB Ingress, IRSA-annotated ServiceAccount, ExternalSecret
+# instead of a plain Secret.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: project
+  namespace: argocd
+spec:
+  project: landing-builder-eks
+  source:
+    repoURL: https://github.com/justthatpixel/eks-configuration.git
+    targetRevision: main
+    path: kind/project
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-eks.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: landing-builder
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

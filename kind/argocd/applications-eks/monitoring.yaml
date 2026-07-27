@@ -1,0 +1,41 @@
+# Prometheus + Grafana on EKS — same chart/version as ../applications/monitoring.yaml,
+# reading kind/monitoring/values-eks.yaml instead of values-kind.yaml
+# (real Grafana credentials + an ALB Ingress instead of port-forward).
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  project: landing-builder-eks
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: "87.19.1"
+      helm:
+        valueFiles:
+          - $values/kind/monitoring/values.yaml
+          - $values/kind/monitoring/values-eks.yaml
+    - repoURL: https://github.com/justthatpixel/eks-configuration.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # kube-prometheus-stack's CRDs (Prometheus, Alertmanager, etc.) have
+      # OpenAPI schemas large enough that client-side apply's
+      # kubectl.kubernetes.io/last-applied-configuration annotation exceeds
+      # Kubernetes' 262144-byte limit — every CRD failed with "metadata.annotations:
+      # Too long", which cascaded into the Prometheus custom resource itself
+      # failing ("no matches for kind Prometheus") since its CRD never
+      # actually landed. Server-side apply tracks field ownership instead of
+      # that annotation, so it doesn't hit the limit — same fix used to
+      # bootstrap ArgoCD's own install originally.
+      - ServerSideApply=true

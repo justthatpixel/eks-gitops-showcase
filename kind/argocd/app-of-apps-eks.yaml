@@ -1,0 +1,24 @@
+# The one thing you `kubectl apply` by hand on the EKS cluster (after
+# bootstrap-eks/) — mirrors app-of-apps.yaml, watching applications-eks/
+# instead of applications/.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps-eks
+  namespace: argocd
+spec:
+  project: landing-builder-eks
+  source:
+    repoURL: https://github.com/justthatpixel/eks-configuration.git
+    targetRevision: main
+    path: kind/argocd/applications-eks
+    directory:
+      recurse: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

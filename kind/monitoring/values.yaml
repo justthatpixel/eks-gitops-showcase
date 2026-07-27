@@ -1,0 +1,42 @@
+# kube-prometheus-stack, trimmed for a single kind node running alongside
+# the app pods — the chart's default resource requests are generous enough
+# to overload a local Docker Desktop VM when combined with everything else.
+#
+# Referenced by ../argocd/applications/monitoring.yaml as
+# $values/kind/monitoring/values.yaml — that Application will fail to sync
+# if this file moves or is deleted.
+
+alertmanager:
+  enabled: false
+
+grafana:
+  enabled: true
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 200m, memory: 256Mi }
+
+prometheus:
+  prometheusSpec:
+    retention: 1d
+    resources:
+      requests: { cpu: 100m, memory: 256Mi }
+      limits: { cpu: 300m, memory: 512Mi }
+    # Discover ServiceMonitors in every namespace, not just this release's —
+    # the app's own ServiceMonitor lives in the app namespace.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+prometheusOperator:
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 150m, memory: 256Mi }
+
+kube-state-metrics:
+  resources:
+    requests: { cpu: 25m, memory: 64Mi }
+    limits: { cpu: 100m, memory: 128Mi }
+
+prometheus-node-exporter:
+  resources:
+    requests: { cpu: 25m, memory: 32Mi }
+    limits: { cpu: 50m, memory: 64Mi }

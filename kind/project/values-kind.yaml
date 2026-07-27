@@ -1,0 +1,28 @@
+# Layered on top of values.yaml for local kind testing:
+#   helm install project infra/project -f infra/project/values.yaml -f infra/project/values-kind.yaml
+#
+# No ALB/ACM (not available outside AWS — ingress-nginx instead), no
+# registry (images loaded directly via `kind load docker-image`), and
+# Postgres/MinIO point at the existing docker-compose.yml containers via
+# host.docker.internal rather than anything deployed into the cluster.
+
+ingress:
+  className: nginx
+  host: localhost
+  certificateArn: "" # ALB-only, unused with nginx
+
+backend:
+  image:
+    tag: local
+  env:
+    storageEndpoint: "http://host.docker.internal:9000"
+    storageForcePathStyle: "true"
+  secretEnv:
+    databaseUrl: "postgresql://postgres:postgres@host.docker.internal:5432/landing_builder"
+    authSecret: "kind-local-dev-secret"
+    storageAccessKey: "minioadmin"
+    storageSecretKey: "minioadmin"
+
+frontend:
+  image:
+    tag: local

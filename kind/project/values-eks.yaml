@@ -1,0 +1,44 @@
+# Layered on top of values.yaml for the real EKS deploy:
+#   helm install project kind/project -f kind/project/values.yaml -f kind/project/values-eks.yaml
+#
+# ArgoCD reads this file directly from git to sync (kind/argocd/applications-eks/project.yaml
+# lists it as a valueFile) — that's why it can't just be gitignored like a
+# local .tfvars file. Fill in the placeholders below with your own
+# `terraform output` values from ../../terraform/live and commit it before
+# syncing. Re-derive them the same way if this cluster is ever torn down
+# and rebuilt — the ACM cert ARN and RDS endpoint are not stable across a
+# destroy/apply cycle.
+
+ingress:
+  className: alb
+  host: <YOUR_DOMAIN> # e.g. example.com — must match terraform.tfvars' domain_name
+  certificateArn: "<ACM_CERTIFICATE_ARN>" # terraform output acm_certificate_arn
+  albGroupName: landing-builder-shared
+
+backend:
+  image:
+    repository: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/landing-builder/backend
+    tag: <IMAGE_TAG> # git SHA of the image you built with schema.prisma + migrations/ retained
+  serviceAccount:
+    # Must be exactly "backend" — terraform/modules/irsa's trust policy is
+    # scoped to "landing-builder:backend" literally, no wildcards.
+    name: backend
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::<AWS_ACCOUNT_ID>:role/landing-builder-demo-backend
+  env:
+    storageRegion: us-east-1
+    storageBucket: <PUBLISHED_PAGES_BUCKET_NAME> # matches terraform.tfvars' published_pages_bucket_name
+    storageForcePathStyle: "false" # real S3, not MinIO
+    storageEndpoint: "" # blank = real S3 endpoint
+  secretEnv:
+    useExternalSecret: true
+    clusterSecretStoreName: aws-parameter-store
+    databaseUrlParamName: /landing-builder/database-url
+    authSecretParamName: /landing-builder/auth-secret
+    # No storageAccessKey/SecretKey — the backend reaches S3 via the IRSA
+    # role above, not static credentials.
+
+frontend:
+  image:
+    repository: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/landing-builder/frontend
+    tag: <IMAGE_TAG>

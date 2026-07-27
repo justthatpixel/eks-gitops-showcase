@@ -1,0 +1,16 @@
+# Parent-level values. Only the Ingress lives at this level — everything
+# service-specific is in charts/backend/values.yaml and
+# charts/frontend/values.yaml, set via the `backend:`/`frontend:` keys below
+# (Helm scopes top-level `<subchart-name>:` blocks into that subchart's own
+# values automatically).
+
+ingress:
+  enabled: true
+  className: alb # overridden to "nginx" in values-kind.yaml for local testing
+  host: landing-builder.example.com # replace with your real domain for a real deploy
+  certificateArn: "" # ALB/ACM only — leave blank for kind (see values-kind.yaml)
+  albGroupName: "" # ALB only — set in values-eks.yaml to share one ALB with Grafana/ArgoCD
+
+# Only the frontend is ever publicly routed — it already proxies /api/* and
+# /p/:slug to the backend itself server-side (application/apps/frontend/next.config.ts),
+# so the backend never needs its own Ingress rule or public exposure.

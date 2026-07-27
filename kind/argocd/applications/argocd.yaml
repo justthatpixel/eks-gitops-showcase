@@ -1,0 +1,38 @@
+# ArgoCD managing its own installation, via the official Helm chart —
+# instead of the manual `kubectl apply -f .../install.yaml` used to
+# originally bootstrap it. Chart 10.2.1 packages the same v3.4.5 that's
+# already running, so this shouldn't trigger a version change.
+#
+# Deliberately MANUAL sync (no `syncPolicy.automated` block below) — this
+# is genuinely riskier than the other Applications here. The raw-manifest
+# install and the Helm chart don't necessarily organize resources
+# identically even at the same ArgoCD version, so the first sync may show
+# a large diff (renamed/restructured resources, not just config changes).
+# Review `argocd app diff argocd` (or the UI's diff view) carefully before
+# the first manual sync — don't assume "no automated block" alone makes
+# this safe, it only stops it from happening *silently*.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  project: landing-builder-kind
+  source:
+    repoURL: https://argoproj.github.io/argo-helm
+    chart: argo-cd
+    targetRevision: "10.2.2"
+    helm:
+      values: |
+        # Matches the ingress-free, port-forward-only access pattern
+        # already in use — see the earlier port-forward commands.
+        server:
+          service:
+            type: ClusterIP
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

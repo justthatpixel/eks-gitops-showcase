@@ -1,0 +1,35 @@
+# Prometheus + Grafana (bundled in one chart). Multi-source Application:
+# pulls the chart from its real Helm repo, but reads values from THIS
+# repo's ../../monitoring/values.yaml — the same trimmed-resources file
+# used for the manual `helm install` earlier — rather than duplicating
+# those values inline and letting the two drift apart.
+#
+# Pinned to the exact version already running (`helm list -n monitoring`),
+# so ArgoCD adopts the existing release instead of trying to change it.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  project: landing-builder-kind
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: "87.19.1"
+      helm:
+        valueFiles:
+          - $values/kind/monitoring/values.yaml
+    - repoURL: https://github.com/justthatpixel/eks-configuration.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

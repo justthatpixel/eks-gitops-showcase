@@ -1,0 +1,40 @@
+# Same role as ../bootstrap/argocd-projects.yaml, scoped to the EKS
+# cluster's ArgoCD instance instead of kind's. Separate AppProject name
+# (landing-builder-eks, not landing-builder-kind) — these are two
+# independent ArgoCD installs on two different clusters, each with its own
+# Applications, even though both read from the same git repo.
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: landing-builder-eks
+  namespace: argocd
+spec:
+  description: Landing page builder — EKS deployment
+  sourceRepos:
+    - https://github.com/justthatpixel/eks-configuration.git
+    - https://prometheus-community.github.io/helm-charts
+    - https://argoproj.github.io/argo-helm
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: landing-builder
+    - server: https://kubernetes.default.svc
+      namespace: monitoring
+    - server: https://kubernetes.default.svc
+      namespace: argocd
+    - server: https://kubernetes.default.svc
+      # kube-prometheus-stack creates Services here (not Pods) to expose
+      # kube-proxy/coredns/scheduler/etcd/controller-manager metrics for
+      # scraping — without this destination, the whole Application gets
+      # stuck retrying forever, since a project rejects the sync as one
+      # unit rather than skipping just the disallowed resources.
+      namespace: kube-system
+  # Wide open — single-operator cluster, not multi-tenant. kube-prometheus-stack
+  # and argo-cd both need cluster-scoped kinds (ClusterRole, CRDs for
+  # ServiceMonitor/PrometheusRule/etc) that a tighter whitelist would block.
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

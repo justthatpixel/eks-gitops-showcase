@@ -1,0 +1,24 @@
+# The one thing you `kubectl apply` by hand (after bootstrap/). From here,
+# ArgoCD watches this repo's kind/argocd/applications/ directory and
+# creates/updates/prunes an Application for every manifest it finds there.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps-kind
+  namespace: argocd
+spec:
+  project: landing-builder-kind
+  source:
+    repoURL: https://github.com/justthatpixel/eks-configuration.git
+    targetRevision: main
+    path: kind/argocd/applications
+    directory:
+      recurse: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

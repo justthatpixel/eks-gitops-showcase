@@ -1,0 +1,12 @@
+# Applied manually, once, before the app-of-apps takes over. `argocd` itself
+# already exists (created when you ran `kubectl create namespace argocd`),
+# so the only thing left to declare here is where the app itself should
+# live — it's currently sitting in `default` because `helm install` was
+# never given a namespace. This moves it to its own namespace, same idea
+# as `landing-builder-{dev,uat,prod}` in the AWS reference build, just
+# without the per-environment split since kind is one local environment.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: landing-builder

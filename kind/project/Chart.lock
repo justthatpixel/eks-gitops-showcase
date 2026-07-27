@@ -1,0 +1,9 @@
+dependencies:
+- name: backend
+  repository: file://charts/backend
+  version: 0.1.0
+- name: frontend
+  repository: file://charts/frontend
+  version: 0.1.0
+digest: sha256:2affc22d011e897f344334ac7883a36af3dfa0718c7968a7b58fc93aebbf6589
+generated: "2026-07-25T08:54:35.58856046Z"

@@ -1,0 +1,41 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "project.fullname" . }}
+  {{- if eq .Values.ingress.className "alb" }}
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }}
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    {{- if .Values.ingress.albGroupName }}
+    # Same group.name on Grafana/ArgoCD's Ingresses (kind/argocd/applications-eks)
+    # merges all three into ONE ALB instead of one each (~$17/month per ALB).
+    alb.ingress.kubernetes.io/group.name: {{ .Values.ingress.albGroupName }}
+    {{- end }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          # Frontend only — it already proxies /api/* and /p/:slug to the
+          # backend itself (application/apps/frontend/next.config.ts), so there is no
+          # separate rule routing straight to the backend Service.
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "project.fullname" . }}-frontend
+                port:
+                  # Hardcoded, not read from charts/frontend/values.yaml: the
+                  # parent chart's own .Values only sees what's explicitly set
+                  # under a `frontend:` key in ITS OWN values files, not the
+                  # subchart's internal defaults — cross-chart value reads
+                  # don't work the way you'd expect in Helm. Keep this in sync
+                  # with charts/frontend/values.yaml's service.port (3000).
+                  number: 3000
+{{- end }}

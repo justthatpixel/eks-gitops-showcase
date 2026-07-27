@@ -1,0 +1,30 @@
+# Default values for frontend. Trimmed from the `helm create` scaffold down
+# to what this chart actually uses.
+
+replicaCount: 1
+
+image:
+  repository: landing-builder/frontend
+  pullPolicy: IfNotPresent
+  tag: "local"
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 3000 # matches application/apps/frontend's Next.js dev/start port
+
+resources:
+  requests: { cpu: 50m, memory: 128Mi }
+  limits: { cpu: 250m, memory: 256Mi }
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
