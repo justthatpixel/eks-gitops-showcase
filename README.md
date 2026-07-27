@@ -1,7 +1,7 @@
 
 # 3-Tier AWS EKS GitOps Project
 
-<img width="1130" height="891" alt="Screenshot 2026-07-27 at 13 05 44" src="https://github.com/user-attachments/assets/c837e0f4-7b5a-438a-b308-6080229163d7" />
+<img width="1131" height="993" alt="Screenshot 2026-07-27 at 20 49 50" src="https://github.com/user-attachments/assets/1537b20b-dc87-45ef-bdba-85ca0e78e6fc" />
 
 
 ## Overview
