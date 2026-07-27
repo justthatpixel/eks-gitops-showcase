@@ -1,10 +1,6 @@
 
 # 3-Tier AWS EKS GitOps Project
 
-Infrastructure and Kubernetes config for the [Three-Tier-Kubernetes-DevSecOps-Project](https://github.com/justthatpixel/Three-Tier-Kubernetes-DevSecOps-Project) app — deliberately a separate repo from the application code, so infra changes and app changes have independent histories, reviews, and CI.
-
-![Demo](docs/demo.gif)
-<!-- Drop your demo gif at docs/demo.gif — this line renders it automatically. -->
 <img width="1130" height="891" alt="Screenshot 2026-07-27 at 13 05 44" src="https://github.com/user-attachments/assets/c837e0f4-7b5a-438a-b308-6080229163d7" />
 
 
