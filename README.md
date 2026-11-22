@@ -32,16 +32,15 @@
 - We'd build one dashboard for system health, with alerts that are actionable, not noisy.
 
 ### 5. Security
-- For security, the philosophy we subscribe to is a "shift-left" approach, AKA try to find the bug as early as possible.
-- For Docker, we shrank the image size using a multi-stage build, from 2GB to ~200MB. Reducing the attack surface (tools that can be used in a container).
-- Within the image it runs as a non-root user (anyone other than root, UID 0).
-- On the developer's machine we run TruffleHog (a pre-commit hook that catches hardcoded secrets and API keys) before it even touches the remote repo.
-- Pushing to the repo triggers the GitHub Actions CI workflow: first check out the app code, run static code checks, then build the Docker image, scan for CVEs and finally push it to a private ECR repo.
-- (Usually you also run unit tests, integration tests and E2E tests as well, smoke tests, performance tests... a lot of testing.)
-- SonarQube = static code analysis, checks the code for bugs and security issues.
-- Trivy = scans the image (OS packages and dependencies) for CVEs, a database of known vulnerabilities.
-- Instead of storing long-lived AWS credentials in GitHub, we use OIDC to get short-lived ones.
-- We use a GitOps tool called Argo CD, which pulls changes by listening to the Git repo (as opposed to a push-based mechanism), so CI never needs access to the cluster.
+- We follow a shift-left approach: catch problems as early as possible.
+- TruffleHog runs as a pre-commit hook, blocking hardcoded secrets before they reach the repo.
+- Every push triggers a GitHub Actions pipeline: static analysis, image build, vulnerability scan, then push to a private ECR repo.
+- SonarQube checks the source code for bugs and security issues.
+- Trivy scans the image for known vulnerabilities (CVEs) and fails the build on high or critical findings.
+- A multi-stage Docker build shrank the image from 2 GB to ~200 MB, reducing the attack surface.
+- Containers run as a non-root user (root is UID 0).
+- OIDC gives GitHub Actions short-lived AWS credentials, so no long-lived keys are stored.
+- Argo CD pulls changes from Git, so CI never needs access to the cluster.
 
 ### 6. Kubernetes deep dive
 - Load balancer: provisioned on AWS by the AWS Load Balancer Controller.
