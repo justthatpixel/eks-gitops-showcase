@@ -6,7 +6,7 @@
 
 
 ---
-## FAQ
+## Interview FAQs
 
 ### 1. What are we deploying?
 - A landing page builder for marketing funnels, similar to WordPress, Squarespace or ClickFunnels.
