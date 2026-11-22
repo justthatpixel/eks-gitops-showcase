@@ -2,6 +2,65 @@
 
 # 3-Tier AWS EKS GitOps Project
 <img width="2218" height="1858" alt="image" src="https://github.com/user-attachments/assets/3e0bdbe4-2ca1-4bd8-b716-0aab0d48d771" />
+
+
+
+---
+## Interview FAQ
+
+### 1. What are we deploying?
+- A landing page builder for marketing funnels, similar to WordPress, Squarespace or ClickFunnels.
+- Users drag and drop components to build their pages.
+- Each user has a dashboard and can publish their site to a custom domain, hosted on S3 static website hosting.
+
+### 2. How is the application built?
+- A 3-tier architecture: frontend, backend and database.
+- Tech stack: Next.js, NestJS and PostgreSQL, built with Claude Code as an AI coding harness.
+
+### 3. How did we deliver it?
+- We keep two repos: one for the application and one for the infrastructure.
+- Phase 1: Built the app and verified it worked locally.
+- Phase 2: Containerised it with Docker and ran it on Kind, which gave us a multi-node Kubernetes cluster on one machine.
+- Phase 3: Provisioned the AWS infrastructure with Terraform, so the whole environment can be rebuilt from code.
+- Phase 4: Hardened security and added observability.
+
+### 4. Observability
+- Logs: container logs shipped to CloudWatch Logs.
+- Metrics: Prometheus and Grafana, installed with Helm.
+- In production we'd add OpenTelemetry, so the app code emits its own metrics, logs and traces.
+- Traces would help investigate latency issues or failed requests.
+- We'd build one dashboard for system health, with alerts that are actionable, not noisy.
+
+### 5. Security
+- For security, the philosophy we subscribe to is a "shift-left" approach, AKA try to find the bug as early as possible.
+- For Docker, we shrank the image size using a multi-stage build, from 2GB to ~200MB. Reducing the attack surface (tools that can be used in a container).
+- Within the image it runs as a non-root user (anyone other than root, UID 0).
+- On the developer's machine we run TruffleHog (a pre-commit hook that catches hardcoded secrets and API keys) before it even touches the remote repo.
+- Pushing to the repo triggers the GitHub Actions CI workflow: first check out the app code, run static code checks, then build the Docker image, scan for CVEs and finally push it to a private ECR repo.
+- (Usually you also run unit tests, integration tests and E2E tests as well, smoke tests, performance tests... a lot of testing.)
+- SonarQube = static code analysis, checks the code for bugs and security issues.
+- Trivy = scans the image (OS packages and dependencies) for CVEs, a database of known vulnerabilities.
+- Instead of storing long-lived AWS credentials in GitHub, we use OIDC to get short-lived ones.
+- We use a GitOps tool called Argo CD, which pulls changes by listening to the Git repo (as opposed to a push-based mechanism), so CI never needs access to the cluster.
+
+### 6. Kubernetes deep dive
+- Load balancer: provisioned on AWS by the AWS Load Balancer Controller.
+- Ingress: 1x Ingress (Gateway API is the recommended successor).
+- Frontend: 1x Deployment and 1x ClusterIP Service.
+- Backend: 1x Deployment and 1x ClusterIP Service.
+- Database: Amazon RDS (Postgres), running outside the cluster.
+- IRSA maps Kubernetes service accounts to IAM roles, so each pod only gets the AWS access it needs.
+- Helm makes it simple to install tools like Argo CD, Prometheus and Grafana, though templated manifests are harder to read.
+- cert-manager renews TLS certificates automatically, keeping traffic encrypted in transit.
+- Secrets live in AWS Secrets Manager, outside the cluster.
+
+### 7. Architectural decisions
+- For 100 users, Docker on one server would do the job with far less overhead. We designed for 10,000+ users.
+- We chose EKS on Fargate so we don't manage nodes: no patching or node right-sizing.
+- The Horizontal Pod Autoscaler still scales pods when traffic spikes, and Fargate provides the compute.
+- For GDPR and SOC 2, data is encrypted in transit with TLS and at rest with AWS KMS.
+
+
 ## Overview
 
 This project focuses on deploying an EKS (Elastic Kubernetes Service) cluster on AWS, integrating key Kubernetes tools such as ArgoCD, Helm Charts, Cert-Manager, and ExternalDNS. The goal is to achieve a robust, automated, and scalable infrastructure setup with streamlined GitOps workflows, secure certificate management, and automated DNS updates.
@@ -34,6 +93,10 @@ Everything downstream of ECR — the app, monitoring stack, and ArgoCD's own upg
 - **SSM Parameter Store**: Stores `DATABASE_URL`, `AUTH_SECRET`, and the Grafana admin password, read in-cluster via External Secrets Operator.
 - **ArgoCD**: GitOps controller running an app-of-apps pattern with scoped `AppProject`s and automated sync.
 - **kube-prometheus-stack**: Prometheus + Grafana, deployed through the same GitOps path as the app.
+
+
+
+
 
 
 ## Setup
