@@ -13,6 +13,17 @@
 - Users drag and drop components to build their pages.
 - Each user has a dashboard and can publish their site to a custom domain, hosted on S3 static website hosting.
 
+### 2. CI/CD Pipeline
+
+1. Every push to the app repo triggers the GitHub Actions workflow.
+2. The Github Actions runner pulls the latest app code.
+3. SonarQube runs static code analysis, checking for bugs and security issues.
+4. Builds the Docker image, tagged with the Git commit SHA.
+5. Trivy scans the image for CVEs and fails the pipeline on any high or critical findings.
+6. Pushes the image to our private ECR repo, using OIDC instead of long-lived AWS keys.
+7. Updates the image tag in the Helm values.yaml in our infra repo.
+8. Argo CD detects the change in the infra repo and syncs it to the cluster.
+
 ### 2. How is the application built?
 - A 3-tier architecture: frontend, backend and database.
 - Tech stack: Next.js, NestJS and PostgreSQL, built with Claude Code as an AI coding harness.
@@ -29,16 +40,15 @@
 - Metrics: Prometheus and Grafana, installed with Helm.
 - In production we'd add OpenTelemetry, so the app code emits its own metrics, logs and traces.
 - Traces would help investigate latency issues or failed requests.
-- We'd build one dashboard for system health, with alerts that are actionable, not noisy.
+- We'd typically build a centralised dashboard for system health, and set up CloudWatch alerts that fire to Slack for spikes and outages.
 
 ### 5. Security
-- We follow a shift-left approach: catch problems as early as possible.
-- TruffleHog runs as a pre-commit hook, blocking hardcoded secrets before they reach the repo.
-- Every push triggers a GitHub Actions pipeline: static analysis, image build, vulnerability scan, then push to a private ECR repo.
-- SonarQube checks the source code for bugs and security issues.
-- Trivy scans the image for known vulnerabilities (CVEs) and fails the build on high or critical findings.
-- A multi-stage Docker build shrank the image from 2 GB to ~200 MB, reducing the attack surface.
-- Containers run as a non-root user (root is UID 0).
+- Shift-left approach, AKA find the bug as early as possible.
+- Multi-stage Docker build shrank the image from 2GB to ~200MB, reducing the attack surface.
+- Containers run as a non-root user.
+- TruffleHog pre-commit hook catches hardcoded secrets before they touch the remote repo.
+- SonarQube = static code analysis for bugs and security issues.
+- Trivy = scans the image for CVEs (known vulnerabilities).
 - OIDC gives GitHub Actions short-lived AWS credentials, so no long-lived keys are stored.
 - Argo CD pulls changes from Git, so CI never needs access to the cluster.
 
@@ -58,7 +68,6 @@
 - We chose EKS on Fargate so we don't manage nodes: no patching or node right-sizing.
 - The Horizontal Pod Autoscaler still scales pods when traffic spikes, and Fargate provides the compute.
 - For GDPR and SOC 2, data is encrypted in transit with TLS and at rest with AWS KMS.
-
 
 ## Overview
 
