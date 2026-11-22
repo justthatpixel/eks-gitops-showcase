@@ -35,6 +35,7 @@
 
 ### 3. How did we deliver it?
 <img width="922" height="512" alt="Screenshot 2026-11-22 at 17 54 29" src="https://github.com/user-attachments/assets/0a2acb53-0aa1-435d-858c-20e4ad57bdfb" />
+
 - We keep two repos: one for the application and one for the infrastructure.
 - Phase 1: Built the app and verified it worked locally.
 - Phase 2: Containerised it with Docker and ran it on Kind, which gave us a multi-node Kubernetes cluster on one machine.
