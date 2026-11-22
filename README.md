@@ -1,5 +1,6 @@
 
 
+
 # 3-Tier AWS EKS GitOps Project
 <img width="2218" height="1858" alt="image" src="https://github.com/user-attachments/assets/3e0bdbe4-2ca1-4bd8-b716-0aab0d48d771" />
 
@@ -9,6 +10,10 @@
 ## Interview FAQs
 
 ### 1. What are we deploying?
+
+<img width="1044" height="548" alt="Screenshot 2026-11-22 at 17 53 06" src="https://github.com/user-attachments/assets/464de054-9ea7-4c37-ac41-6c71f8811e5b" />
+
+
 - A landing page builder for marketing funnels, similar to WordPress, Squarespace or ClickFunnels.
 - Users drag and drop components to build their pages.
 - Each user has a dashboard and can publish their site to a custom domain, hosted on S3 static website hosting.
@@ -29,6 +34,7 @@
 - Tech stack: Next.js, NestJS and PostgreSQL, built with Claude Code as an AI coding harness.
 
 ### 3. How did we deliver it?
+<img width="922" height="512" alt="Screenshot 2026-11-22 at 17 54 29" src="https://github.com/user-attachments/assets/0a2acb53-0aa1-435d-858c-20e4ad57bdfb" />
 - We keep two repos: one for the application and one for the infrastructure.
 - Phase 1: Built the app and verified it worked locally.
 - Phase 2: Containerised it with Docker and ran it on Kind, which gave us a multi-node Kubernetes cluster on one machine.
