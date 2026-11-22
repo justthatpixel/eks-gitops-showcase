@@ -29,11 +29,11 @@
 7. Updates the image tag in the Helm values.yaml in our infra repo.
 8. Argo CD detects the change in the infra repo and syncs it to the cluster.
 
-### 2. How is the application built?
+### 3. How is the application built?
 - A 3-tier architecture: frontend, backend and database.
 - Tech stack: Next.js, NestJS and PostgreSQL, built with Claude Code as an AI coding harness.
 
-### 3. How did we deliver it?
+### 4. How did we deliver it?
 <img width="922" height="512" alt="Screenshot 2026-11-22 at 17 54 29" src="https://github.com/user-attachments/assets/0a2acb53-0aa1-435d-858c-20e4ad57bdfb" />
 
 - We keep two repos: one for the application and one for the infrastructure.
@@ -42,14 +42,14 @@
 - Phase 3: Provisioned the AWS infrastructure with Terraform, so the whole environment can be rebuilt from code.
 - Phase 4: Hardened security and added observability.
 
-### 4. Observability
+### 5. Observability
 - Logs: container logs shipped to CloudWatch Logs.
 - Metrics: Prometheus and Grafana, installed with Helm.
 - In production we'd add OpenTelemetry, so the app code emits its own metrics, logs and traces.
 - Traces would help investigate latency issues or failed requests.
 - We'd typically build a centralised dashboard for system health, and set up CloudWatch alerts that fire to Slack for spikes and outages.
 
-### 5. Security
+### 6. Security
 - Shift-left approach, AKA find the bug as early as possible.
 - Multi-stage Docker build shrank the image from 2GB to ~200MB, reducing the attack surface.
 - Containers run as a non-root user.
@@ -59,7 +59,7 @@
 - OIDC gives GitHub Actions short-lived AWS credentials, so no long-lived keys are stored.
 - Argo CD pulls changes from Git, so CI never needs access to the cluster.
 
-### 6. Kubernetes deep dive
+### 7. Kubernetes deep dive
 - Load balancer: provisioned on AWS by the AWS Load Balancer Controller.
 - Ingress: 1x Ingress (Gateway API is the recommended successor).
 - Frontend: 1x Deployment and 1x ClusterIP Service.
@@ -70,7 +70,7 @@
 - cert-manager renews TLS certificates automatically, keeping traffic encrypted in transit.
 - Secrets live in AWS Secrets Manager, outside the cluster.
 
-### 7. Architectural decisions
+### 8. Architectural decisions
 - For 100 users, Docker on one server would do the job with far less overhead. We designed for 10,000+ users.
 - We chose EKS on Fargate so we don't manage nodes: no patching or node right-sizing.
 - The Horizontal Pod Autoscaler still scales pods when traffic spikes, and Fargate provides the compute.
