@@ -33,14 +33,14 @@
 - A 3-tier architecture: frontend, backend and database.
 - Tech stack: Next.js, NestJS and PostgreSQL, built with Claude Code as an AI coding harness.
 
-### 4. How did we deliver it?
+### 4. How did we build this pipeline?
 <img width="922" height="512" alt="Screenshot 2026-11-22 at 17 54 29" src="https://github.com/user-attachments/assets/0a2acb53-0aa1-435d-858c-20e4ad57bdfb" />
 
 - We keep two repos: one for the application and one for the infrastructure.
-- Phase 1: Built the app and verified it worked locally.
-- Phase 2: Containerised it with Docker and ran it on Kind, which gave us a multi-node Kubernetes cluster on one machine.
-- Phase 3: Provisioned the AWS infrastructure with Terraform, so the whole environment can be rebuilt from code.
-- Phase 4: Hardened security and added observability.
+- 1: Built the app and verified it worked locally.
+- 2: Containerised it with Docker and ran it on Kind, which gave us a multi-node Kubernetes cluster on one machine.
+- 3: Provisioned the AWS infrastructure with Terraform, so the whole environment can be rebuilt from code.
+- 4: Hardened security and added observability.
 
 ### 5. Observability
 - Logs: container logs shipped to CloudWatch Logs.
@@ -71,8 +71,11 @@
 - Secrets live in AWS Secrets Manager, outside the cluster.
 
 ### 8. Architectural decisions
-- For 100 users, Docker on one server would do the job with far less overhead. We designed for 10,000+ users.
-- We chose EKS on Fargate so we don't manage nodes: no patching or node right-sizing.
+- ECS could easily support 1K–10M+ users, so scale wasn't the reason for Kubernetes.
+- We chose Kubernetes because we want access to the GitOps ecosystem (Argo CD, Helm, Prometheus, Grafana).
+- Terraform and Kubernetes give us the option to stand the platform up on another cloud, e.g. during a major cloud outage, as our app layer is portable and all infrastructure is defined as code.
+- We chose EKS on Fargate: EKS manages the control plane, and Fargate handles the compute for us.
+- Fargate bills on the CPU and memory each pod requests, so we still have to define appropriate requests.
 - The Horizontal Pod Autoscaler still scales pods when traffic spikes, and Fargate provides the compute.
 - For GDPR and SOC 2, data is encrypted in transit with TLS and at rest with AWS KMS.
 
