@@ -46,8 +46,9 @@
 - Logs: container logs shipped to CloudWatch Logs.
 - Metrics: Prometheus and Grafana, installed with Helm.
 - In production we'd add OpenTelemetry, so the app code emits its own metrics, logs and traces.
-- Traces would help investigate latency issues or failed requests.
-- We'd typically build a centralised dashboard for system health, and set up CloudWatch alerts that fire to Slack for spikes and outages.
+- We'd define SLIs and SLOs around our key user journeys (e.g. login, publishing a page).
+- We'd build a central dashboard for system health, with CloudWatch alerts to Slack on symptoms users feel (e.g. pages taking more than 2s to load).
+- Each alert links to a runbook (a step-by-step guide on how to fix the problem).
 
 ### 6. Security
 - Shift-left approach, AKA find the bug as early as possible.
